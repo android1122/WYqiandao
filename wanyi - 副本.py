@@ -38,8 +38,27 @@ def dataprogress(s,su):#预登录数据处理
     pubkey = re.compile('"pubkey":".{256}')
     pubkey=pubkey.findall(r1.content)
     pubkey=pubkey[0].replace('"pubkey":"','')
+    yanzhen=download(s,pcid)
     sp=haspw('密码',servertime,nonce,pubkey)#进入加密模块——输入密码，加密密码
     return login(s,su,servertime,nonce,rsakv,sp)#返回到正式登录
+
+def download(s,pcid):#下载验证码进行处理
+    # url='https://login.sina.com.cn/cgi/pin.php?r=36944441&s=0&p='+pcid
+    # yanzhen=s.get(url)
+    # with open('D:\\BaiduNetdiskDownload\\1.png', "wb") as file:
+       # for data in yanzhen.content:
+           # file.write(data)
+    im=Image.open ('D:\\BaiduNetdiskDownload\\1.png')
+    img=im.convert('RGBA')
+    pix = img.load()
+    for y in range(img.size[1]):  # 二值化处理，这个阈值为R=95，G=95，B=95
+        for x in range(img.size[0]):
+            if (pix[x, y][0] == 101 and pix[x, y][1] == 101) or (pix[x, y][0] and pix[x, y][2] == 101) or (pix[x, y][1] and pix[x, y][2] == 101):
+                pix[x, y] = (255, 255, 255, 255)
+            # elif pix[x, y][0] < 255 or pix[x, y][1] < 255 or pix[x, y][2] < 255:
+                # pix[x, y] = (0, 0, 0, 255)
+    img.save('D:\\BaiduNetdiskDownload\\2.png', 'png')
+    print pytesser.image_file_to_string('D:\\BaiduNetdiskDownload\\2.png')#图片识别，效度堪忧
     
 def login(s,su,servertime,nonce,rsakv,sp):#正式登陆数据处理
     postdata={
@@ -50,10 +69,11 @@ def login(s,su,servertime,nonce,rsakv,sp):#正式登陆数据处理
         'userticket': '1',
         'pagerefer':'',
         'ct': '1800',
+        'pcid':pcid,#验证码图片编码,
         's':'1',
         'vsnf': '1',
         'vsnval': '',
-        'door':'',
+        'door':yanzhen,#验证码内容
         'appkey':'52laFx',
         'su':su,
         'service': 'miniblog',
